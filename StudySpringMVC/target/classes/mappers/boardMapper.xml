@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardMapper">
+	   <!-- Writing a bulletin board -->
+   <insert id="insert">
+	   INSERT INTO BOARD
+	   (IDX, TITLE,	WRITER, REGDATE, COUNT,	CONTENT, REGIP, FILENAME )
+	  VALUES
+	  ( board_seq.nextval, #{title}, #{writer}, system, #{count}, #{content}, #{regip}, #{filename} )   
+   </insert>
+   
+   	<select id="list" resultType="kr.co.vo.Board">
+		SELECT IDX, TITLE,	WRITER, REGDATE, COUNT,	CONTENT, REGIP, FILENAME 
+		FROM BOARD
+		  ORDER BY IDX DESC
+	</select>
+	
+	<select id="read" parameterType="int" resultType="kr.co.vo.Board">
+		SELECT * 
+		FROM BOARD
+		  WHERE IDX = #{idx}
+	</select>
+	
+	<update id="update" parameterType="kr.co.vo.Board">
+		UPDATE BOARD
+		SET TITLE = #{title},
+			WRITER = #{writer},
+			CONTENT = #{content}
+		WHERE IDX = #{idx}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		DELETE FROM BOARD
+		WHERE IDX = #{idx}
+	</delete>
+	
+	<select id="listPage" resultType="kr.co.vo.Board" parameterType="kr.co.vo.Criteria">
+		SELECT 
+				IDX,
+				TITLE,	
+				WRITER, 
+				REGDATE, 
+				COUNT,	
+				CONTENT, 
+				REGIP, 
+				FILENAME 
+		FROM
+			(SELECT IDX,
+					TITLE,	
+					WRITER, 
+					REGDATE, 
+					COUNT,	
+					CONTENT, 
+					REGIP, 
+					FILENAME,
+					ROW_NUMBER() OVER(ORDER BY IDX DESC) AS RNUM
+			 FROM BOARD 
+			 )
+		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
+		ORDER BY IDX DESC
+	</select>
+	
+		<select id="listCount" resultType="int">
+			<![CDATA[
+				SELECT COUNT(IDX)
+				  FROM BOARD
+				 WHERE IDX > 0
+			]]>
+	</select>
+	
+</mapper>
