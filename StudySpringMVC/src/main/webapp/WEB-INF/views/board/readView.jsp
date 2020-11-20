@@ -32,8 +32,10 @@
 			
 			// Cancel
 			$(".list_btn").on("click", function(){
-				
-				location.href = "/board/list";
+			
+			location.href = "/board/list?page=${scri.page}"
+							+"&perPageNum=${scri.perPageNum}"
+							+"&searchType=${scri.searchType}&keyword=${scri.keyword}";
 			})
 		})
 	</script>
@@ -52,7 +54,11 @@
 			
 			<section id="container">
 				<form name="readForm" role="form" method="post">
-					<input type="hidden" id="idx" name="idx" value="${read.idx}" />
+					  <input type="hidden" id="idx" name="idx" value="${read.idx}" />
+					  <input type="hidden" id="page" name="page" value="${scri.page}"> 
+					  <input type="hidden" id="perPageNum" name="perPageNum" value="${scri.perPageNum}"> 
+					  <input type="hidden" id="searchType" name="searchType" value="${scri.searchType}"> 
+					  <input type="hidden" id="keyword" name="keyword" value="${scri.keyword}"> 
 				</form>
 				<table>
 					<tbody>
@@ -74,7 +80,7 @@
 						<tr>
 							<td>
 								<label for="regdate">Date</label>
-								<fmt:formatDate value="${read.regdate}" pattern="yyyy-MM-dd" />					
+								<c:out value="${read.regdate}" />					
 							</td>
 						</tr>		
 					</tbody>			
@@ -82,8 +88,23 @@
 				<div>
 					<button type="submit" class="update_btn">Update</button>
 					<button type="submit" class="delete_btn">Delete</button>
-					<button type="submit" class="list_btn">Cancel</button>	
+					<button type="submit" class="list_btn">  Cancel</button>	
 				</div>
+				
+				<!-- comment -->
+				<div id="reply">
+				  <ol class="replyList">
+				    <c:forEach items="${replyList}" var="replyList">
+				      <li>
+				        <p>
+				        E-mail : ${replyList.writer}<br/>
+				        Creation date :  <fmt:formatDate value="${replyList.regdate}" pattern="yyyy-MM-dd"/>
+				        </p>				
+				        <p>${replyList.content}</p>
+				      </li>
+				    </c:forEach>   
+				  </ol>
+				</div>				
 			</section>
 			<hr />
 		</div>

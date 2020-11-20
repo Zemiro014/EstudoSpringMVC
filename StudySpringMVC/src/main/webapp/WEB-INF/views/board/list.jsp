@@ -29,7 +29,11 @@
 							<tr>
 								<td><c:out value="${list.idx}" /></td>
 								<td>
-									<a href="/board/readView?idx=${list.idx}"> <c:out value="${list.title}" /></a>
+									<a href="/board/readView?idx=${list.idx}&
+															page=${scri.page}&
+															perPageNum=${scri.perPageNum}&
+															searchType=${scri.searchType}&
+															keyword=${scri.keyword}"><c:out value="${list.title}" /></a>
 								</td>
 								<td><c:out value="${list.writer}" /></td>
 								<td><c:out value="${list.content}" /></td>
