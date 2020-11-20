@@ -1,16 +1,16 @@
 package kr.co.service;
 
 import kr.co.vo.Board;
-import kr.co.vo.Criteria;
+import kr.co.vo.SearchCriteria;
 
 import java.util.List;
 public interface BoardService 
 {
 	public void write(Board board) throws Exception;
 	
-	public List<Board> list(Criteria cri) throws Exception;
+	public List<Board> list(SearchCriteria cri) throws Exception;
 	
-	public int listCount() throws Exception;
+	public int listCount(SearchCriteria cri) throws Exception;
 	
 	public Board read(int idx) throws Exception;
 	

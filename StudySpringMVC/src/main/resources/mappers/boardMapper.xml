@@ -62,12 +62,21 @@
 		ORDER BY IDX DESC
 	</select>
 	
-		<select id="listCount" resultType="int">
+	<select id="listCount" resultType="int">
 			<![CDATA[
 				SELECT COUNT(IDX)
 				  FROM BOARD
 				 WHERE IDX > 0
 			]]>
 	</select>
+	
+	<sql id="search">
+			<if test="searchType != null">
+			<if test="searchType == 't'.toString()"> AND TITLE LIKE '%' 	|| #{keyword} || '%'</if>
+			<if test="searchType == 'c'.toString()"> AND CONTENT LIKE '%' 	|| #{keyword} || '%'</if>
+			<if test="searchType == 'w'.toString()"> AND WRITER LIKE '%' 	|| #{keyword} || '%'</if>
+			<if test="searchType == 'tc'.toString()">AND (TITLE LIKE '%' 	|| #{keyword} || '%') or (CONTENT LIKE '%' || #{keyword} || '%')</if>
+		</if>
+	</sql>
 	
 </mapper>

@@ -8,7 +8,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
 import kr.co.vo.Board;
-import kr.co.vo.Criteria;
+import kr.co.vo.SearchCriteria;
 
 @Repository
 public class BoardDAOImpl implements BoardDAO
@@ -24,14 +24,14 @@ public class BoardDAOImpl implements BoardDAO
 	}
 
 	@Override
-	public List<Board> list(Criteria cri) throws Exception {
+	public List<Board> list(SearchCriteria scri) throws Exception {
 		// TODO Auto-generated method stub
-		return sqlSession.selectList("boardMapper.listPage", cri);
+		return sqlSession.selectList("boardMapper.listPage", scri);
 	}
 	@Override
-	public int listCount() throws Exception
+	public int listCount(SearchCriteria scri) throws Exception
 	{
-		return sqlSession.selectOne("boardMapper.listCount");
+		return sqlSession.selectOne("boardMapper.listCount", scri);
 	}
 	@Override
 	public Board read(int idx) throws Exception {
