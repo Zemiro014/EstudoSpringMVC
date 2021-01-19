@@ -1,7 +1,13 @@
 package kr.co.controller;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.File;
+import java.net.URLEncoder;
 import java.util.List;
+import java.util.Map;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +16,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import kr.co.service.BoardService;
@@ -35,25 +43,25 @@ public class ControllerBoard
 	ReplyService replyService;
 	
 	@RequestMapping(value = "/writeView", method = RequestMethod.GET)
-	public void write() throws Exception
+	public void writeView() throws Exception
 	{
-		logger.info("writeView");
+		logger.info("WriteView or showing the registration form to the user");
 	}
 	
 	@RequestMapping(value = "/board/write", method = RequestMethod.POST)
-	public String write(Board board) throws Exception 
+	public String write(Board board, MultipartHttpServletRequest mpRequest) throws Exception 
 	{
-		logger.info("write");
+		logger.info("Write or Passing form records to the database");
 		
-		service.write(board);
+		service.write(board, mpRequest);
 		
-		return "redirect:/";
+		return "redirect:/board/list";
 	}
 	
 	@RequestMapping(value = "/list", method=RequestMethod.GET)
 	public String list(Model model, @ModelAttribute("scri") SearchCriteria scri) throws Exception
 	{
-		logger.info("Listing the data");
+		logger.info("Listing the data or Listing the database data from the BOARD table");
 		
 		model.addAttribute("list",service.list(scri));
 		
@@ -76,6 +84,9 @@ public class ControllerBoard
 		List<ReplyVO> replyList = replyService.readReply(board.getIdx());
 		model.addAttribute("replyList",replyList);
 		
+		List<Map<String, Object>> fileList = service.selectFileList(board.getIdx());
+		model.addAttribute("file",fileList);
+		
 		return "board/readView";
 	}
 	
@@ -87,15 +98,19 @@ public class ControllerBoard
 		model.addAttribute("update",service.read(board.getIdx()));
 		model.addAttribute("scri", scri);
 		
+		List<Map<String, Object>> fileList = service.selectFileList(board.getIdx());
+		model.addAttribute("file", fileList);
+		
 		return"board/updateView";
 	}
 	
 	@RequestMapping(value="/update", method = RequestMethod.POST)
-	public String update(Board board,@ModelAttribute("scri") SearchCriteria scri, RedirectAttributes rttr) throws Exception
+	public String update(Board board,@ModelAttribute("scri") SearchCriteria scri, RedirectAttributes rttr, @RequestParam(value="fileNoDel[]") String[] files,
+			 				@RequestParam(value="fileNameDel[]") String[] fileNames, MultipartHttpServletRequest mpRequest) throws Exception
 	{
-		logger.info("updatind Date");
+		logger.info("Udatind Date or Passing the updated data to the database in the BOARD table");
 		
-		service.update(board);
+		service.update(board, files, fileNames, mpRequest);
 		
 		rttr.addAttribute("page", scri.getPage());
 		rttr.addAttribute("perPageNum", scri.getPerPageNum());
@@ -108,7 +123,7 @@ public class ControllerBoard
 	@RequestMapping(value="/delete", method = RequestMethod.POST)
 	public String delete(Board board, @ModelAttribute("scri") SearchCriteria scri, RedirectAttributes rttr) throws Exception
 	{
-		logger.info("Deleting Date");
+		logger.info("Deleting Date in the BOARD table");
 		
 		service.delete(board.getIdx());
 		
@@ -119,4 +134,94 @@ public class ControllerBoard
 		
 		return "redirect:/board/list";
 	}
+	
+	@RequestMapping(value = "/replyWrite", method = RequestMethod.POST)
+	public String replyWrite(ReplyVO rVO, SearchCriteria scri, RedirectAttributes rttr) throws Exception
+	{
+		logger.info("Replying Write");
+		
+		replyService.writeReply(rVO);
+		
+		rttr.addAttribute("idx", rVO.getIdx());
+		rttr.addAttribute("page",scri.getPage());
+		rttr.addAttribute("perPageNum", scri.getPerPageNum());
+		rttr.addAttribute("searchType", scri.getSearchType());
+		rttr.addAttribute("keyword",scri.getKeyword());
+		
+		return "redirect:/board/readView";
+	}
+	
+	@RequestMapping(value = "/replyUpdateView", method=RequestMethod.GET)
+	public String replyUpdateView(ReplyVO rVO, SearchCriteria scri, Model model) throws Exception
+	{
+		logger.info("Display Replying Write");
+		
+		model.addAttribute("replyUpdate", replyService.selectReply(rVO.getId_r()));
+		model.addAttribute("scri", scri);		
+		
+		return "board/replyUpdateView";
+	}
+	
+	@RequestMapping(value="/replyUpdate", method=RequestMethod.POST)
+	public String replyUpdate(ReplyVO rVO, SearchCriteria scri, RedirectAttributes rttr) throws Exception
+	{
+		logger.info("Replying Write");
+		
+		replyService.updateReplay(rVO);
+		rttr.addAttribute("idx", rVO.getIdx());
+		rttr.addAttribute("page", scri.getPage());
+		rttr.addAttribute("perPageNum", scri.getPerPageNum());
+		rttr.addAttribute("searchType",scri.getSearchType());
+		rttr.addAttribute("keyword",scri.getKeyword());
+		
+		return "redirect:/board/readView";
+	}
+	
+		//GET Delete Comment
+		@RequestMapping(value="/replyDeleteView", method = RequestMethod.GET)
+		public String replyDeleteView(ReplyVO rVO, SearchCriteria scri, Model model) throws Exception 
+		{
+			logger.info("reply Write");
+			
+			model.addAttribute("replyDelete", replyService.selectReply(rVO.getId_r()));
+			model.addAttribute("scri", scri);
+			
+
+			return "board/replyDeleteView";
+		}
+		
+		//Delete comment
+		@RequestMapping(value="/replyDelete", method = RequestMethod.POST)
+		public String replyDelete(ReplyVO rVO, SearchCriteria scri, RedirectAttributes rttr) throws Exception 
+		{
+			logger.info("reply Write");
+			
+			replyService.deleteReply(rVO);
+			
+			rttr.addAttribute("idx", rVO.getIdx());
+			rttr.addAttribute("page", scri.getPage());
+			rttr.addAttribute("perPageNum", scri.getPerPageNum());
+			rttr.addAttribute("searchType", scri.getSearchType());
+			rttr.addAttribute("keyword", scri.getKeyword());
+			
+			return "redirect:/board/readView";
+		}
+		
+		@RequestMapping(value="/fileDown")
+		public void fileDown(@RequestParam Map<String, Object> map, HttpServletResponse response) throws Exception
+		{
+			Map<String, Object> resultMap = service.selectFileInfo(map);
+			String storedFileName = (String) resultMap.get("STORED_FILE_NAME");
+			String originalFileName = (String) resultMap.get("ORG_FILE_NAME");
+			
+			// // Leia o arquivo anexado do local onde o arquivo foi salvo e converta-o no formato byte [].
+			byte fileByte[] = org.apache.commons.io.FileUtils.readFileToByteArray(new File("C:\\mp\\file\\"+storedFileName));
+			
+			response.setContentType("application/octet-stream");
+			response.setContentLength(fileByte.length);
+			response.setHeader("Content-Disposition",  "attachment; fileName=\""+URLEncoder.encode(originalFileName, "UTF-8")+"\";");
+			response.getOutputStream().write(fileByte);
+			response.getOutputStream().flush();
+			response.getOutputStream().close();
+		}
 }

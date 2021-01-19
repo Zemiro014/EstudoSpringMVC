@@ -3,80 +3,136 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="boardMapper">
-	   <!-- Writing a bulletin board -->
-   <insert id="insert">
-	   INSERT INTO BOARD
-	   (IDX, TITLE,	WRITER, REGDATE, COUNT,	CONTENT, REGIP, FILENAME )
-	  VALUES
-	  ( board_seq.nextval, #{title}, #{writer}, system, #{count}, #{content}, #{regip}, #{filename} )   
-   </insert>
+	<!-- Writing a bulletin board -->
+	<insert id="insert" parameterType="kr.co.vo.Board" useGeneratedKeys="true" keyProperty="idx">
+	    <selectKey keyProperty="idx" resultType="int" order="BEFORE">
+	    	SELECT board_seq.nextval FROM DUAL
+	    </selectKey>
+	    	INSERT INTO BOARD(
+	    					     IDX 
+	   					       , TITLE 
+	   					       , CONTENT 
+	   					       , WRITER  
+	   					     )
+	                  VALUES( 
+	                  		     #{idx}
+	                 		   , #{title}
+	                 		   , #{content}
+	                 		   , #{writer} 
+	                 		)   
+    </insert>
    
-   	<select id="list" resultType="kr.co.vo.Board">
-		SELECT IDX, TITLE,	WRITER, REGDATE, COUNT,	CONTENT, REGIP, FILENAME 
-		FROM BOARD
-		  ORDER BY IDX DESC
-	</select>
-	
-	<select id="read" parameterType="int" resultType="kr.co.vo.Board">
-		SELECT * 
-		FROM BOARD
-		  WHERE IDX = #{idx}
-	</select>
-	
-	<update id="update" parameterType="kr.co.vo.Board">
-		UPDATE BOARD
-		SET TITLE = #{title},
-			WRITER = #{writer},
-			CONTENT = #{content}
-		WHERE IDX = #{idx}
-	</update>
-	
-	<delete id="delete" parameterType="int">
-		DELETE FROM BOARD
-		WHERE IDX = #{idx}
-	</delete>
-	
-	<select id="listPage" resultType="kr.co.vo.Board" parameterType="kr.co.vo.Criteria">
-		SELECT 
-				IDX,
-				TITLE,	
-				WRITER, 
-				REGDATE, 
-				COUNT,	
-				CONTENT, 
-				REGIP, 
-				FILENAME 
-		FROM
-			(SELECT IDX,
-					TITLE,	
-					WRITER, 
-					REGDATE, 
-					COUNT,	
-					CONTENT, 
-					REGIP, 
-					FILENAME,
-					ROW_NUMBER() OVER(ORDER BY IDX DESC) AS RNUM
-			 FROM BOARD 
-			 )
+	<select id="listPage" resultType="kr.co.vo.Board" parameterType="kr.co.vo.SearchCriteria">
+		SELECT  IDX, 
+		        TITLE, 
+		        CONTENT,
+		        WRITER, 
+		        REGDATE,
+		        HIT
+		 FROM ( 
+		        SELECT IDX, 
+		               TITLE, 
+		               CONTENT, 
+		               WRITER, 
+		               REGDATE, 
+		               HIT,
+		               ROW_NUMBER() OVER(ORDER BY IDX DESC) AS RNUM
+		         FROM BOARD
+		         WHERE 1=1 
+		         	<include refid="search"></include>
+		                       ) MP
 		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
 		ORDER BY IDX DESC
 	</select>
 	
-	<select id="listCount" resultType="int">
-			<![CDATA[
-				SELECT COUNT(IDX)
-				  FROM BOARD
-				 WHERE IDX > 0
-			]]>
+	<select id="listCount" parameterType="kr.co.vo.SearchCriteria" resultType="int">
+		SELECT COUNT(IDX)
+		   FROM BOARD
+		   WHERE 1=1
+		<include refid="search"></include>	
+		   AND IDX > 0
 	</select>
 	
 	<sql id="search">
-			<if test="searchType != null">
-			<if test="searchType == 't'.toString()"> AND TITLE LIKE '%' 	|| #{keyword} || '%'</if>
-			<if test="searchType == 'c'.toString()"> AND CONTENT LIKE '%' 	|| #{keyword} || '%'</if>
-			<if test="searchType == 'w'.toString()"> AND WRITER LIKE '%' 	|| #{keyword} || '%'</if>
-			<if test="searchType == 'tc'.toString()">AND (TITLE LIKE '%' 	|| #{keyword} || '%') or (CONTENT LIKE '%' || #{keyword} || '%')</if>
+		<if test="searchType != null">
+			<if test="searchType == 't'.toString()">	AND TITLE LIKE '%' 		|| #{keyword} || '%'</if>
+			<if test="searchType == 'c'.toString()">	AND CONTENT LIKE '%' 	|| #{keyword} || '%'</if>
+			<if test="searchType == 'w'.toString()">	AND WRITER LIKE '%' 	|| #{keyword} || '%'</if>
+			<if test="searchType == 'tc'.toString()">	AND (TITLE LIKE '%' 	|| #{keyword} || '%') or (CONTENT LIKE '%' || #{keyword} || '%')</if>
 		</if>
 	</sql>
 	
+	<select id="read" parameterType="int" resultType="kr.co.vo.Board">
+		SELECT   IDX
+			   , TITLE
+			   , CONTENT
+			   , WRITER
+			   , REGDATE
+		  FROM BOARD
+		 WHERE IDX = #{idx}
+	</select>
+	
+	<update id="update" parameterType="kr.co.vo.Board">
+		UPDATE BOARD
+		   SET TITLE    =   #{title},
+		   	   CONTENT  =   #{content}
+		 WHERE IDX = #{idx} 
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		DELETE 
+		  FROM BOARD
+		 WHERE IDX = #{idx}
+	</delete>
+   
+   <!-- About File -->
+    <insert id="insertFile" parameterType="hashMap">
+		INSERT INTO MP_FILE(
+			FILE_ID,
+			IDX,
+			ORG_FILE_NAME,
+			STORED_FILE_NAME,
+			FILE_SIZE
+		)VALUES(
+			SEQ_MP_FILE_ID.NEXTVAL,
+			#{IDX},
+			#{ORG_FILE_NAME},
+			#{STORED_FILE_NAME},
+			#{FILE_SIZE}
+		)
+    </insert>
+    
+    <!-- Attachment Search -->
+    <select id="selectFileList" parameterType="int" resultType="hashMap">
+		SELECT FILE_ID,
+			   ORG_FILE_NAME,
+			   ROUND(FILE_SIZE/1024,1) AS FILE_SIZE
+		  FROM MP_FILE
+		 WHERE IDX = #{IDX}
+		   AND DEL_GB = 'N'
+		   ORDER BY FILE_ID ASC
+	</select>
+	
+	<!-- Download the attached file -->
+	<select id="selectFileInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			STORED_FILE_NAME,
+			ORG_FILE_NAME
+		FROM MP_FILE
+		WHERE FILE_ID = #{FILE_ID}
+	</select>
+	
+	 <update id="updateFile" parameterType="hashMap">
+    	UPDATE MP_FILE SET
+    	DEL_GB = 'Y'
+    	WHERE FILE_ID = #{FILE_ID}
+    </update>
+    
+        <!-- Visualizações do quadro de avisos -->
+    <update id="boardHit" parameterType="int">
+    	UPDATE BOARD SET
+    	HIT = HIT+1
+    	WHERE IDX = #{idx}
+    </update>
+
 </mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="memberMapper">
+		<!-- Write a bulletin board -->
+	<insert id="register">
+		INSERT INTO MP_MEMBER
+			(
+				USERID,
+				USERPASS,
+				USERNAME
+			)
+		VALUES
+			(
+				#{userId},
+				#{userPass},
+				#{userName}
+			)
+	</insert>
+	
+	<!-- Ele recebe userId e userPass como parâmetros e passa o valor do resultado pesquisado para MemberVO de resultType.
+		Aqui, parameterType pode ser omitido. -->
+	<select id="login" resultType="kr.co.vo.MemberVO">
+		SELECT USERID, USERPASS
+		FROM MP_MEMBER
+			WHERE USERID = #{userId}
+			<!--  AND USERPASS = #{userPass} -->
+	</select>
+
+	<!-- Member information modification -->
+	<update id="memberUpdate">
+		UPDATE MP_MEMBER SET 
+		<!--  USERPASS = #{userPass},-->
+		USERNAME = #{userName}
+		WHERE USERID = #{userId}
+	</update>
+	
+	<delete id="memberDelete">
+		DELETE FROM MP_MEMBER
+		WHERE USERID=#{userId}
+		<!-- AND USERPASS = #{userPass} -->
+	</delete>
+	
+	<!-- Password check -->
+	<select id="passChk" resultType="int">
+		SELECT COUNT(*) FROM MP_MEMBER
+		WHERE USERID=#{userId}
+		AND USERPASS=#{userPass}
+	</select>
+	
+	<!-- ID duplicate check -->
+	<select id="idChk" resultType="int">
+		SELECT COUNT(*) FROM MP_MEMBER
+		WHERE USERID = #{userId}
+	</select>
+	
+</mapper>

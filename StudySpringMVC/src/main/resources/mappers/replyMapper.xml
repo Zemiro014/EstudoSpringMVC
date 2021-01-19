@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="replyMapper">
+
+<!-- View comments -->
+	<select id="readReply" resultType="kr.co.vo.ReplyVO"> 
+    	SELECT
+    		  ID_R, CONTENT, WRITER, REGDATE
+    	 FROM MP_REPLY
+    	WHERE IDX = #{idx}
+	</select>
+	
+	<insert id="writeReply">
+		INSERT INTO MP_REPLY
+			(
+				IDX,
+				ID_R,
+				CONTENT,
+				WRITER
+			)
+		VALUES
+			(
+				#{idx},
+				MP_REPLY_SEQ.NEXTVAL,
+				#{content},
+				#{writer}
+			)
+	</insert>
+	
+	<!-- Edit comment -->
+	<update id="updateReply" parameterType="kr.co.vo.ReplyVO">
+		UPDATE MP_REPLY SET CONTENT = #{content}
+		WHERE ID_R = #{id_r}
+	</update>
+
+	<!-- Delete comment -->
+	<delete id="deleteReply" parameterType="kr.co.vo.ReplyVO">
+		DELETE FROM MP_REPLY
+		WHERE ID_R = #{id_r}
+	</delete>
+	
+	<!-- View selected comments -->
+	<select id="selectReply" resultType="kr.co.vo.ReplyVO">
+		SELECT
+				idx
+			  , id_r
+			  , CONTENT
+			  , WRITER
+			  , REGDATE
+		  FROM MP_REPLY
+		 WHERE ID_R = #{id_r}
+	</select>
+</mapper>

@@ -7,6 +7,8 @@ import javax.inject.Inject;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import java.util.Map;
+
 import kr.co.vo.Board;
 import kr.co.vo.SearchCriteria;
 
@@ -46,5 +48,35 @@ public class BoardDAOImpl implements BoardDAO
 	@Override
 	public void delete(int idx) throws Exception {
 		sqlSession.delete("boardMapper.delete",idx);		
+	}
+
+	// It receives and sends a Map type parameter. Map will have FILE_ID.
+	@Override
+	public void insertFile(Map<String, Object> map) throws Exception {
+		sqlSession.insert("boardMapper.insertFile", map);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectFile(int idx) throws Exception 
+	{
+		return sqlSession.selectList("boardMapper.selectFileList",idx);
+	}
+
+	@Override
+	public Map<String, Object> selectFileInfo(Map<String, Object> map) throws Exception
+	{
+		return sqlSession.selectOne("boardMapper.selectFileInfo", map);
+	}
+
+	@Override
+	public void updateFile(Map<String, Object> map) throws Exception
+	{
+		sqlSession.update("boardMapper.updateFile", map);		
+	}
+
+	@Override
+	public void boardHit(int idx) throws Exception 
+	{
+		sqlSession.update("boardMapper.boardHit", idx);
 	}
 }
